@@ -1,27 +1,14 @@
 module.exports = function FlyMore(dispatch) {
-	let enabled = false;
+	let outOfEnergy = false
 
-	dispatch.hook('S_CANT_FLY_ANYMORE', 1, () => {
-		if (enabled) return false;
-	});
-	
-	dispatch.hook('C_CHAT', 1, (event) => {
-		if(event.message.includes("!fly")) {
-			enabled = !enabled;
-			message(`Fly-More toggled: ${enabled}`);
-			return false;
+	dispatch.hook('S_CANT_FLY_ANYMORE', 1, () => false)
+
+	dispatch.hook('S_PLAYER_CHANGE_FLIGHT_ENERGY', 1, event => { outOfEnergy = event.energy === 0 })
+
+	dispatch.hook('C_PLAYER_FLYING_LOCATION', 3, event => {
+		if(outOfEnergy && event.type !== 7 && event.type !== 8) {
+			event.type = 7
+			return true
 		}
-	});
-  
-	function message(msg) {
-		dispatch.toClient('S_CHAT', 1, {
-			channel: 24,
-			authorID: 0,
-			unk1: 0,
-			gm: 0,
-			unk2: 0,
-			authorName: '',
-			message: '(FlyMore) ' + msg
-		});
-	}
+	})
 }
